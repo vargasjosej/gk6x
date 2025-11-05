@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=GK6X Configurator
+Comment=Configure GK6X Keyboards (GK61, GK64, GK84)
+Exec=gk6x_gui
+Icon=gk6x
+Type=Application
+Categories=Utility;Settings;HardwareSettings;
+Terminal=false
+StartupNotify=true
+Keywords=keyboard;gk6x;gk61;gk64;gk84;configuration;macro;lighting;

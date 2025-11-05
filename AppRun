@@ -1,0 +1,44 @@
+#!/bin/bash
+# AppRun script for GK6X AppImage
+
+SELF=$(readlink -f "$0")
+HERE=${SELF%/*}
+
+# Set up environment
+export PATH="${HERE}/usr/bin:${PATH}"
+export LD_LIBRARY_PATH="${HERE}/usr/lib:${LD_LIBRARY_PATH}"
+export PYTHONPATH="${HERE}/usr/lib/python3/dist-packages:${PYTHONPATH}"
+export MONO_PATH="${HERE}/usr/lib/mono"
+export MONO_CONFIG="${HERE}/usr/etc/mono/config"
+
+# Check if running with sudo/root privileges
+if [ "$EUID" -eq 0 ]; then
+    # Running as root, execute directly
+    exec "${HERE}/usr/bin/python3" "${HERE}/usr/bin/gk6x_gui" "$@"
+else
+    # Check if device access is available
+    if [ -e /dev/hidraw0 ]; then
+        # Check if we have permission
+        if [ -r /dev/hidraw0 ] && [ -w /dev/hidraw0 ]; then
+            # We have permission, run normally
+            exec "${HERE}/usr/bin/python3" "${HERE}/usr/bin/gk6x_gui" "$@"
+        else
+            # No permission, suggest running with sudo
+            zenity --question --title="GK6X Configurator" \
+                --text="This application needs access to USB HID devices.\n\nDo you want to run with elevated privileges?" \
+                --width=400 2>/dev/null
+            
+            if [ $? -eq 0 ]; then
+                pkexec "${HERE}/usr/bin/python3" "${HERE}/usr/bin/gk6x_gui" "$@"
+            else
+                zenity --error --title="GK6X Configurator" \
+                    --text="Cannot access keyboard without proper permissions.\n\nYou can either:\n1. Run with sudo/pkexec\n2. Set up udev rules (see documentation)" \
+                    --width=400 2>/dev/null
+                exit 1
+            fi
+        fi
+    else
+        # No HID device found, just run the app
+        exec "${HERE}/usr/bin/python3" "${HERE}/usr/bin/gk6x_gui" "$@"
+    fi
+fi
